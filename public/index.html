@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manajemen Jadwal Pelajaran</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
+</head>
+<body class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200 block">
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 dark:bg-slate-950 text-slate-300 flex flex-col border-r border-slate-800 transform transition-transform duration-300 ease-in-out">
+    <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+      <div class="flex items-center gap-2.5">
+        <span class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        </span>
+        <h2 class="text-xl font-bold text-white tracking-wider">Kelasku</h2>
+      </div>
+      <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-slate-800 transition" title="Tutup Sidebar">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+    </div>
+    <nav class="p-4 flex flex-col gap-2 flex-1">
+      <div class="space-y-2">
+      <button id="navHome" onclick="showSection('home')" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium bg-slate-700 text-white transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path></svg>
+        Jadwal Pelajaran
+      </button>
+      <button id="navTugas" onclick="showSection('tugas')" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+        <span class="flex-1 text-left">Tugas</span>
+        <span id="tugasBadge" title="" class="hidden text-xs font-bold text-slate-400">0</span>
+      </button>
+      </div>
+      <button id="navApi" onclick="showSection('api')" class="mt-auto w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+        API Generator
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Main Area -->
+  <div id="mainContent" class="md:ml-64 flex flex-col min-h-screen bg-white dark:bg-slate-900 transition-all duration-300 ease-in-out">
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="fixed top-8 left-1/2 transform -translate-x-1/2 bg-slate-900 dark:bg-indigo-600 text-white px-5 py-3 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-2.5 text-sm z-50 opacity-0 transition-all duration-300 pointer-events-none scale-95">
+      <svg class="w-5 h-5 text-emerald-400 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+      <span class="font-medium">URL Copied</span>
+    </div>
+
+    <!-- Bagian atas putih: header + field kelas -->
+    <div class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+      <div class="max-w-7xl w-full mx-auto px-6 pt-8 pb-6">
+      
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+          <div class="flex items-center gap-3 w-full md:w-auto">
+            <button id="openSidebarBtn" onclick="toggleSidebar()" class="hidden p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Buka Sidebar">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <div>
+              <h1 id="pageTitle" class="text-3xl font-bold text-slate-900 dark:text-white">Manajemen Jadwal</h1>
+              <p id="pageSubtitle" class="text-sm text-slate-500 dark:text-slate-400">Pusat pengaturan jadwal pelajaran dan export API n8n.</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="toggleDarkMode()" id="darkModeToggle" class="p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Toggle Dark Mode">
+              <svg id="sunIcon" class="w-5 h-5 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+              <svg id="moonIcon" class="w-5 h-5 block dark:hidden text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+            <button id="btnAddJadwal" onclick="openAddModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2.5 rounded-xl shadow transition">
+              + Tambah Jadwal
+            </button>
+            <button id="btnAddTugas" onclick="openTugasModal()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl shadow transition">
+              + Tambah Tugas
+            </button>
+          </div>
+        </header>
+
+        <!-- Filter Kelas (hanya di Beranda, tetap di area abu-abu) -->
+        <div id="homeFilterWrapper">
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center gap-4 transition-colors">
+            <label for="classSelect" class="font-semibold text-slate-700 dark:text-slate-200">Pilih Kelas:</label>
+            <select id="classSelect" onchange="onClassChange()" class="w-full sm:w-72 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+              <option value="">-- Pilih Kelas --</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filter Tugas (hanya di halaman Tugas) -->
+        <div id="tugasFilterWrapper" class="hidden">
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-center gap-4 transition-colors">
+            <label for="tugasClassSelect" class="font-semibold text-slate-700 dark:text-slate-200">Pilih Kelas:</label>
+            <select id="tugasClassSelect" onchange="onTugasFilterChange()" class="w-full sm:w-64 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+              <option value="">Semua Kelas</option>
+            </select>
+            <label for="tugasStatusSelect" class="font-semibold text-slate-700 dark:text-slate-200">Status:</label>
+            <select id="tugasStatusSelect" onchange="onTugasFilterChange()" class="w-full sm:w-48 border border-slate-300 dark:border-slate-600 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+              <option value="">Semua Status</option>
+              <option value="belum">Belum</option>
+              <option value="proses">Proses</option>
+              <option value="selesai">Selesai</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bagian bawah putih: cards jadwal + halaman API -->
+    <div class="bg-white dark:bg-slate-900 flex-1">
+      <div class="max-w-7xl w-full mx-auto px-6 py-6">
+
+      <!-- Section Beranda -->
+      <section id="homeSection">
+        <!-- Container Jadwal (Senin - Jumat) -->
+        <div id="scheduleContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Diisi oleh JS -->
+        </div>
+      </section>
+
+      <!-- Section Tugas -->
+      <section id="tugasSection" class="hidden">
+        <div id="tugasContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Diisi oleh JS -->
+        </div>
+      </section>
+
+      <!-- Section Halaman API -->
+      <section id="apiSection" class="hidden">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 max-w-xl mx-auto">
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Generator Endpoint API Export</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">Pilih kelas dan hari untuk menghasilkan URL endpoint JSON yang siap digunakan di n8n atau kebutuhan scraping.</p>
+          
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Jenjang/Kelas</label>
+                <select id="apiKelas" class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+                  <option value="">-- Pilih Kelas --</option>
+                  <option value="X">X</option>
+                  <option value="XI">XI</option>
+                  <option value="XII">XII</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Divisi</label>
+                <select id="apiDivisi" class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+                  <option value="">-- Pilih Divisi --</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Hari</label>
+              <select id="apiHari" class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+                <option value="">-- Pilih Hari --</option>
+                <option value="Senin">Senin</option>
+                <option value="Selasa">Selasa</option>
+                <option value="Rabu">Rabu</option>
+                <option value="Kamis">Kamis</option>
+                <option value="Jumat">Jumat</option>
+              </select>
+            </div>
+
+            <button type="button" onclick="generateAPIURL()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-xl text-sm shadow transition">
+              Buat URL Endpoint
+            </button>
+
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-700">
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Hasil URL API:</label>
+              <div class="flex gap-2">
+                <input type="text" id="apiURLInput" readonly placeholder="URL akan muncul di sini..." class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 focus:outline-none">
+                <button type="button" id="copyBtn" onclick="copyToClipboard('apiURLInput')" title="Copy URL" class="bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-xl text-xs font-medium shrink-0 transition flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 max-w-xl mx-auto mt-6">
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Generator Endpoint API Export Tugas</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">Pilih kelas dan opsi hari (h) untuk menghasilkan URL endpoint tugas yang siap digunakan di n8n. Kosongkan h untuk semua tugas belum selesai.</p>
+
+          <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Jenjang/Kelas</label>
+                <select id="apiTugasKelas" class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+                  <option value="">-- Pilih Kelas --</option>
+                  <option value="X">X</option>
+                  <option value="XI">XI</option>
+                  <option value="XII">XII</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Divisi</label>
+                <select id="apiTugasDivisi" class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+                  <option value="">-- Pilih Divisi --</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Hari sebelum deadline (h, opsional)</label>
+              <input type="number" id="apiTugasH" min="1" placeholder="Misal: 3 (kosongkan untuk semua)" class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+            </div>
+
+            <button type="button" onclick="generateTugasAPIURL()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-xl text-sm shadow transition">
+              Buat URL Endpoint Tugas
+            </button>
+
+            <div class="pt-4 border-t border-slate-100 dark:border-slate-700">
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Hasil URL API:</label>
+              <div class="flex gap-2">
+                <input type="text" id="apiTugasURLInput" readonly placeholder="URL akan muncul di sini..." class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 focus:outline-none">
+                <button type="button" onclick="copyToClipboard('apiTugasURLInput')" title="Copy URL" class="bg-emerald-600 hover:bg-emerald-700 text-white p-2.5 rounded-xl text-xs font-medium shrink-0 transition flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tambah/Edit Jadwal -->
+  <div id="scheduleModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border border-slate-200 dark:border-slate-700">
+      <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+        <h3 id="modalTitle" class="font-bold text-lg text-slate-900 dark:text-white">Tambah Jadwal Pelajaran</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl font-bold">&times;</button>
+      </div>
+      <form id="scheduleForm" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4 overflow-y-auto flex-1">
+        <input type="hidden" id="editId">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Jenjang/Kelas</label>
+            <select id="inputKelas" onchange="onModalClassChange()" required class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+              <option value="">-- Pilih Kelas --</option>
+              <option value="X">X</option>
+              <option value="XI">XI</option>
+              <option value="XII">XII</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Divisi/Bagian</label>
+            <select id="inputDivisi" disabled required class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-100 dark:bg-slate-700/50 text-slate-800 dark:text-slate-100 disabled:opacity-60">
+              <option value="">-- Pilih Divisi --</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Hari</label>
+          <select id="inputHari" required class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+            <option value="Senin">Senin</option>
+            <option value="Selasa">Selasa</option>
+            <option value="Rabu">Rabu</option>
+            <option value="Kamis">Kamis</option>
+            <option value="Jumat">Jumat</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300">Daftar Mata Pelajaran</label>
+            <button type="button" id="addSubjectRowBtn" onclick="addSubjectRow()" class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center gap-1">
+              + Tambah Mapel
+            </button>
+          </div>
+          <div id="subjectRowsContainer" class="space-y-3">
+            <!-- Diisi JS -->
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-2 border-t border-slate-100 dark:border-slate-700">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium shadow">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Tambah/Edit Tugas -->
+  <div id="tugasModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh] border border-slate-200 dark:border-slate-700">
+      <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center">
+        <h3 id="tugasModalTitle" class="font-bold text-lg text-slate-900 dark:text-white">Tambah Tugas</h3>
+        <button onclick="closeTugasModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xl font-bold">&times;</button>
+      </div>
+      <form id="tugasForm" onsubmit="handleTugasFormSubmit(event)" class="p-6 space-y-4 overflow-y-auto flex-1">
+        <input type="hidden" id="editTugasId">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Jenjang/Kelas</label>
+            <select id="inputTugasKelas" onchange="onTugasModalClassChange()" class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+              <option value="">-- Pilih Kelas --</option>
+              <option value="X">X</option>
+              <option value="XI">XI</option>
+              <option value="XII">XII</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Divisi/Bagian</label>
+            <select id="inputTugasDivisi" disabled class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-100 dark:bg-slate-700/50 text-slate-800 dark:text-slate-100 disabled:opacity-60">
+              <option value="">-- Pilih Divisi --</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Mata Pelajaran</label>
+          <input type="text" id="inputTugasMapel" placeholder="Misal: Matematika" class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Judul Tugas</label>
+          <input type="text" id="inputTugasJudul" placeholder="Misal: Kerjakan halaman 42" required class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Deskripsi</label>
+          <textarea id="inputTugasDeskripsi" rows="3" placeholder="Detail tugas (opsional)" class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Deadline</label>
+            <input type="date" id="inputTugasDeadline" required class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Status</label>
+            <select id="inputTugasStatus" class="w-full border border-slate-300 dark:border-slate-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100">
+              <option value="belum">Belum</option>
+              <option value="proses">Proses</option>
+              <option value="selesai">Selesai</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 pt-2 border-t border-slate-100 dark:border-slate-700">
+          <button type="button" onclick="closeTugasModal()" class="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-medium shadow">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
