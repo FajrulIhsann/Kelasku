@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 let pool;
 
@@ -245,7 +245,7 @@ app.get('/api/tugas', async (req, res) => {
     if (conds.length > 0) {
       sql += ' WHERE ' + conds.join(' AND ');
     }
-    sql += ' ORDER BY deadline ASC';
+    sql += ` ORDER BY FIELD(status, 'belum', 'proses', 'selesai'), deadline ASC`;
     const [rows] = await pool.query(sql, params);
     res.json(rows);
   } catch (err) {
@@ -377,6 +377,12 @@ app.delete('/api/tugas/:id', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Halaman terpisah: /jadwal, /tugas, /generate-api
+app.get('/', (req, res) => res.redirect('/jadwal'));
+app.get('/jadwal', (req, res) => res.sendFile(path.join(__dirname, 'public', 'jadwal.html')));
+app.get('/tugas', (req, res) => res.sendFile(path.join(__dirname, 'public', 'tugas.html')));
+app.get('/generate-api', (req, res) => res.sendFile(path.join(__dirname, 'public', 'generate-api.html')));
 
 app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
