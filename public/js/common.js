@@ -91,7 +91,7 @@ function escapeHtml(str) {
 }
 
 // Ganti <span data-icon="nama" data-cls="..."> jadi SVG dari icons.js.
-// Lihat ICON_HELPER.md untuk daftar nama ikon.
+// Lihat docs/ICON_HELPER.md untuk daftar nama ikon.
 function hydrateIcons(root = document) {
   if (typeof icon !== 'function') return;
   root.querySelectorAll('[data-icon]').forEach(el => {

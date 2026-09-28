@@ -1,6 +1,6 @@
 // Ikon terpusat Kelasku (Heroicons outline).
 // Satu-satunya sumber path SVG — halaman/JS lain cukup panggil icon() atau data-icon.
-// Lihat ICON_HELPER.md untuk cara pakai.
+// Lihat docs/ICON_HELPER.md untuk cara pakai.
 
 const ICON_PATHS = {
   logo: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
