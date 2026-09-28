@@ -167,13 +167,13 @@ function tugasCardHtml(item) {
         <span class="text-xs font-bold px-2.5 py-1 rounded-full ${statusBadgeClass(item.status)}">${escapeHtml(statusLabel(item.status))}</span>
         <div class="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
           ${nextStatus ? `<button onclick="advanceTugasStatus(${item.id}, '${nextStatus}')" title="Ubah ke ${statusLabel(nextStatus)}" class="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 p-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            ${icon('advance', 'w-4 h-4')}
           </button>` : ''}
           <button onclick="openEditTugasModal(${item.id})" title="Edit" class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+            ${icon('edit', 'w-4 h-4')}
           </button>
           <button onclick="deleteTugas(${item.id})" title="Hapus" class="text-slate-400 hover:text-red-600 dark:hover:text-red-400 p-1">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            ${icon('trash', 'w-4 h-4')}
           </button>
         </div>
       </div>

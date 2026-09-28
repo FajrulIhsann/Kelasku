@@ -28,28 +28,32 @@
     <div class="p-6 border-b border-slate-800 flex justify-between items-center">
       <div class="flex items-center gap-2.5">
         <span class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shrink-0">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          <span data-icon="logo" data-cls="w-5 h-5 text-white"></span>
         </span>
         <h2 class="text-xl font-bold text-white tracking-wider">Kelasku</h2>
       </div>
       <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-slate-800 transition" title="Tutup Sidebar">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <span data-icon="close" data-cls="w-5 h-5"></span>
       </button>
     </div>
     <nav class="p-4 flex flex-col gap-2 flex-1">
       <div class="space-y-2">
+      <a id="navDashboard" href="/dashboard" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition">
+        <span data-icon="home" data-cls="w-4 h-4"></span>
+        Dashboard
+      </a>
       <a id="navHome" href="/jadwal" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path></svg>
+        <span data-icon="book" data-cls="w-4 h-4"></span>
         Jadwal Pelajaran
       </a>
       <a id="navTugas" href="/tugas" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium bg-slate-700 text-white transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+        <span data-icon="task" data-cls="w-4 h-4"></span>
         <span class="flex-1 text-left">Tugas</span>
         <span id="tugasBadge" title="" class="hidden text-xs font-bold text-slate-400">0</span>
       </a>
       </div>
       <a id="navApi" href="/generate-api" class="mt-auto w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+        <span data-icon="code" data-cls="w-4 h-4"></span>
         API Generator
       </a>
     </nav>
@@ -59,7 +63,7 @@
   <div id="mainContent" class="md:ml-64 flex flex-col min-h-screen bg-white dark:bg-slate-900 transition-all duration-300 ease-in-out">
     <!-- Toast Notification -->
     <div id="toastNotification" class="fixed top-8 left-1/2 transform -translate-x-1/2 bg-slate-900 dark:bg-indigo-600 text-white px-5 py-3 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-2.5 text-sm z-50 opacity-0 transition-all duration-300 pointer-events-none scale-95">
-      <svg class="w-5 h-5 text-emerald-400 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+      <span data-icon="check" data-cls="w-5 h-5 text-emerald-400 dark:text-white"></span>
       <span class="font-medium">URL Copied</span>
     </div>
 
@@ -71,7 +75,7 @@
         <header class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <div class="flex items-center gap-3 w-full md:w-auto">
             <button id="openSidebarBtn" onclick="toggleSidebar()" class="hidden p-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Buka Sidebar">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+              <span data-icon="menu" data-cls="w-5 h-5"></span>
             </button>
             <div>
               <h1 id="pageTitle" class="text-3xl font-bold text-slate-900 dark:text-white">Manajemen Tugas</h1>
@@ -80,8 +84,8 @@
           </div>
           <div class="flex items-center gap-3">
             <button onclick="toggleDarkMode()" id="darkModeToggle" class="p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="Toggle Dark Mode">
-              <svg id="sunIcon" class="w-5 h-5 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-              <svg id="moonIcon" class="w-5 h-5 block dark:hidden text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+              <span id="sunIcon" data-icon="sun" data-cls="w-5 h-5 hidden dark:block text-amber-400"></span>
+              <span id="moonIcon" data-icon="moon" data-cls="w-5 h-5 block dark:hidden text-slate-600"></span>
             </button>
             <button id="btnAddTugas" onclick="openTugasModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-5 py-2.5 rounded-xl shadow transition">
               + Tambah Tugas
@@ -184,6 +188,7 @@
     </div>
   </div>
 
+  <script src="js/icons.js"></script>
   <script src="js/common.js"></script>
   <script src="js/tugas.js"></script>
 </body>

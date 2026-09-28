@@ -378,8 +378,114 @@ app.delete('/api/tugas/:id', async (req, res) => {
   }
 });
 
-// Halaman terpisah: /jadwal, /tugas, /generate-api
-app.get('/', (req, res) => res.redirect('/jadwal'));
+// 10. Dashboard harian agregat (WIB): jadwal hari ini & besok + tugas hari ini/mendesak
+app.get('/api/dashboard', async (req, res) => {
+  const { kelas, divisi } = req.query;
+  if (!kelas || !divisi) {
+    return res.status(400).json({ error: 'Parameter kelas dan divisi wajib diisi' });
+  }
+  try {
+    const k = kelas.trim();
+    const d = divisi.trim();
+
+    // Tanggal & jam WIB (Asia/Jakarta) dari server
+    const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' });
+    const parts = Object.fromEntries(fmt.formatToParts(new Date()).map(p => [p.type, p.value]));
+    const todayStr = `${parts.year}-${parts.month}-${parts.day}`;
+    const weekdayFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jakarta', weekday: 'short' });
+    const jsDay = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[weekdayFmt.format(new Date())];
+    const SEKOLAH = [null, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+
+    // Jam WIB untuk cutoff: >= CUTOFF_HOUR tampilkan jadwal besok
+    const CUTOFF_HOUR = 15;
+    const hourFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Jakarta', hour: 'numeric', hour12: false });
+    const wibHour = parseInt(hourFmt.format(new Date()), 10);
+
+    // Cari hari sekolah berikutnya (skip Sabtu/Minggu). Jumat -> Senin.
+    function nextSchoolDay(fromJsDay) {
+      for (let i = 1; i <= 3; i++) {
+        const cand = (fromJsDay + i) % 7;
+        if (cand >= 1 && cand <= 5) return { jsDay: cand, hari: SEKOLAH[cand], plusDays: i };
+      }
+      return { jsDay: 1, hari: 'Senin', plusDays: 1 };
+    }
+
+    const isSchoolDay = jsDay >= 1 && jsDay <= 5;
+    const todayHari = isSchoolDay ? SEKOLAH[jsDay] : null;
+    const nxt = nextSchoolDay(jsDay);
+    const tomorrowHari = nxt.hari;
+    const tomorrowStr = new Date(new Date(`${todayStr}T00:00:00+07:00`).getTime() + nxt.plusDays * 86400000);
+
+    const [jadwalRows] = await pool.query(
+      'SELECT hari, mapel, jp FROM jadwal WHERE kelas = ? AND divisi = ? ORDER BY FIELD(hari, "Senin","Selasa","Rabu","Kamis","Jumat"), id ASC',
+      [k, d]
+    );
+    const [tugasRows] = await pool.query(
+      "SELECT id, mapel, judul, deskripsi, deadline, status FROM tugas WHERE kelas = ? AND divisi = ? AND status != 'selesai' ORDER BY deadline ASC",
+      [k, d]
+    );
+
+    const week = { Senin: 0, Selasa: 0, Rabu: 0, Kamis: 0, Jumat: 0 };
+    jadwalRows.forEach(r => { if (week[r.hari] !== undefined) week[r.hari]++; });
+
+    const startOfDay = dstr => new Date(`${dstr}T00:00:00+07:00`).getTime();
+    const endOfDay = dstr => new Date(`${dstr}T23:59:59+07:00`).getTime();
+    const t0 = startOfDay(todayStr);
+    const t1 = endOfDay(todayStr);
+
+    const overdue = [], today = [], tomorrowTugas = [], upcoming = [];
+    tugasRows.forEach(t => {
+      const dl = new Date(t.deadline).getTime();
+      if (isNaN(dl)) { upcoming.push(t); return; }
+      if (dl < t0) overdue.push(t);
+      else if (dl <= t1) today.push(t);
+      else if (dl <= t1 + 86400000) tomorrowTugas.push(t);
+      else if (dl <= t1 + 3 * 86400000) upcoming.push(t);
+    });
+
+    const jadwalHariIni = todayHari ? jadwalRows.filter(r => r.hari === todayHari) : [];
+    const jadwalBesok = jadwalRows.filter(r => r.hari === tomorrowHari);
+
+    // Fokus 1 kartu: sebelum cutoff tampil hari ini, sesudah cutoff (>=15:00) tampil besok.
+    // Akhir pekan (libur) selalu fokus ke hari sekolah berikutnya.
+    const isSchoolDayNow = isSchoolDay;
+    const cutoffApplied = isSchoolDayNow && wibHour >= CUTOFF_HOUR;
+    const fokusIsBesok = !isSchoolDayNow || cutoffApplied;
+    const fokus = {
+      hari: fokusIsBesok ? tomorrowHari : todayHari,
+      label: fokusIsBesok ? 'besok' : 'hari ini',
+      jadwal: fokusIsBesok ? jadwalBesok : jadwalHariIni,
+      libur: false
+    };
+
+    res.json({
+      kelas: `${k}-${d}`,
+      server_time_wib: new Date().toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }),
+      wib_hour: wibHour,
+      cutoff_hour: CUTOFF_HOUR,
+      cutoff_applied: cutoffApplied,
+      fokus,
+      today: { date: todayStr, hari: todayHari, libur: !isSchoolDay, jadwal: jadwalHariIni },
+      tomorrow: { hari: tomorrowHari, jadwal: jadwalBesok },
+      tugas: { overdue, today, tomorrow: tomorrowTugas, upcoming_3hari: upcoming },
+      stats: {
+        jadwal_hari_ini: jadwalHariIni.length,
+        jadwal_besok: jadwalBesok.length,
+        tugas_terlambat: overdue.length,
+        tugas_hari_ini: today.length,
+        tugas_besok: tomorrowTugas.length,
+        belum_selesai: tugasRows.length,
+        week
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Halaman terpisah: / (dashboard), /jadwal, /tugas, /generate-api
+app.get('/', (req, res) => res.redirect('/dashboard'));
+app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, 'public', 'dashboard.html')));
 app.get('/jadwal', (req, res) => res.sendFile(path.join(__dirname, 'public', 'jadwal.html')));
 app.get('/tugas', (req, res) => res.sendFile(path.join(__dirname, 'public', 'tugas.html')));
 app.get('/generate-api', (req, res) => res.sendFile(path.join(__dirname, 'public', 'generate-api.html')));

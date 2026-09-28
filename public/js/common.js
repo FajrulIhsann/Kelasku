@@ -90,6 +90,21 @@ function escapeHtml(str) {
   }[match]));
 }
 
+// Ganti <span data-icon="nama" data-cls="..."> jadi SVG dari icons.js.
+// Lihat ICON_HELPER.md untuk daftar nama ikon.
+function hydrateIcons(root = document) {
+  if (typeof icon !== 'function') return;
+  root.querySelectorAll('[data-icon]').forEach(el => {
+    const name = el.getAttribute('data-icon');
+    const cls = el.getAttribute('data-cls') || 'w-4 h-4';
+    el.innerHTML = icon(name, cls);
+    el.removeAttribute('data-icon');
+    el.removeAttribute('data-cls');
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => hydrateIcons());
+
 async function updateTugasBadge() {
   try {
     const res = await fetch('/api/tugas');
