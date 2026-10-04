@@ -51,6 +51,89 @@ function fillDivisiOptions(selectEl, selectedVal = '') {
   });
 }
 
+// Master mapel (diambil dari GET /api/mapel, di-cache di memori).
+let MAPEL_CACHE = null;
+
+async function loadMapelList(force = false) {
+  if (MAPEL_CACHE && !force) return MAPEL_CACHE;
+  try {
+    const res = await fetch('/api/mapel');
+    const list = await res.json();
+    MAPEL_CACHE = Array.isArray(list) ? list : [];
+  } catch (err) {
+    console.error('Gagal memuat daftar mapel:', err);
+    MAPEL_CACHE = MAPEL_CACHE || [];
+  }
+  return MAPEL_CACHE;
+}
+
+async function fillMapelOptions(selectEl, selectedVal = '') {
+  if (!selectEl) return;
+  const placeholder = selectEl.querySelector('option[value=""]');
+  selectEl.innerHTML = '';
+  const emptyOpt = document.createElement('option');
+  emptyOpt.value = '';
+  emptyOpt.textContent = placeholder ? placeholder.textContent : '-- Pilih Mapel --';
+  selectEl.appendChild(emptyOpt);
+
+  const list = await loadMapelList();
+  const names = list.map(m => m.nama);
+  // Nilai lama (misal data sebelum ada master mapel) tetap ditampilkan agar tidak hilang.
+  if (selectedVal && !names.includes(selectedVal)) names.unshift(selectedVal);
+  names.forEach(nama => {
+    const opt = document.createElement('option');
+    opt.value = nama;
+    opt.textContent = nama;
+    if (nama === selectedVal) opt.selected = true;
+    selectEl.appendChild(opt);
+  });
+
+  const addOpt = document.createElement('option');
+  addOpt.value = '__baru__';
+  addOpt.textContent = '＋ Mapel baru...';
+  selectEl.appendChild(addOpt);
+}
+
+// Dipanggil saat dropdown mapel memilih "＋ Mapel baru...".
+// prompt() sengaja dipakai agar tetap konsisten dengan confirm() yang sudah ada.
+async function handleMapelBaru(selectEl) {
+  if (!selectEl || selectEl.value !== '__baru__') return;
+  const nama = (prompt('Nama mapel baru:') || '').trim();
+  if (!nama) {
+    selectEl.value = '';
+    return;
+  }
+  try {
+    const res = await fetch('/api/mapel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nama })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal menambah mapel');
+    showToast('Mapel ditambahkan');
+    await refreshMapelSelects(nama, selectEl);
+  } catch (err) {
+    alert('Gagal: ' + err.message);
+    selectEl.value = '';
+  }
+}
+
+// Muat ulang semua dropdown mapel yang sedang tampil (baris jadwal + modal tugas)
+// sambil menjaga nilai masing-masing; select pemicu diisi nilai baru.
+async function refreshMapelSelects(selectVal = null, targetSel = null) {
+  await loadMapelList(true);
+  const selects = [...document.querySelectorAll('select.subject-input')];
+  const tugasSel = document.getElementById('inputTugasMapel');
+  if (tugasSel) selects.push(tugasSel);
+  for (const sel of selects) {
+    let keep = sel.value;
+    if (keep === '__baru__') keep = (sel === targetSel && selectVal) ? selectVal : '';
+    await fillMapelOptions(sel, keep);
+  }
+}
+
+
 function showToast(message = 'URL Copied') {
   const toast = document.getElementById('toastNotification');
   if (!toast) return;

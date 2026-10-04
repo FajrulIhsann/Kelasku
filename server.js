@@ -61,8 +61,22 @@ async function initDB() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS mapel (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nama VARCHAR(100) NOT NULL UNIQUE
+      )
+    `);
+
+    // Seed daftar mapel standar SMA hanya jika tabel masih kosong
+    // (daftar buatan pengguna tidak akan pernah tertimpa).
+    const [[{ c }]] = await connection.query('SELECT COUNT(*) AS c FROM mapel');
+    if (c === 0) {
+      const seed = ['Matematika', 'Fisika', 'Kimia', 'Biologi', 'Bahasa Indonesia', 'Bahasa Inggris', 'Sejarah', 'Geografi', 'Ekonomi', 'Sosiologi', 'PPKn', 'Pendidikan Agama', 'PJOK', 'Seni Budaya', 'Informatika', 'Prakarya'];
+      await connection.query('INSERT INTO mapel (nama) VALUES ?', [seed.map(n => [n])]);
+    }
     connection.release();
-    console.log(`Database '${dbName}' & tabel 'jadwal', 'tugas' siap.`);
+    console.log(`Database '${dbName}' & tabel 'jadwal', 'tugas', 'mapel' siap.`);
   } catch (err) {
     console.error('Gagal inisialisasi database:', err.message);
   }
@@ -373,6 +387,47 @@ app.delete('/api/tugas/:id', async (req, res) => {
       return res.status(404).json({ error: 'Tugas tidak ditemukan' });
     }
     res.json({ message: 'Tugas berhasil dihapus' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 9.1. Master mapel: daftar untuk dropdown + kelola sendiri
+app.get('/api/mapel', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT id, nama FROM mapel ORDER BY nama ASC');
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 9.2. Tambah mapel baru (tolak duplikat)
+app.post('/api/mapel', async (req, res) => {
+  const nama = (req.body.nama || '').trim();
+  if (!nama) {
+    return res.status(400).json({ error: 'Nama mapel wajib diisi' });
+  }
+  try {
+    const [result] = await pool.query('INSERT INTO mapel (nama) VALUES (?)', [nama]);
+    res.status(201).json({ id: result.insertId, nama, message: 'Mapel berhasil ditambahkan' });
+  } catch (err) {
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'Mapel sudah ada' });
+    }
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 9.3. Hapus mapel (data jadwal/tugas lama yang memakai nama ini tidak ikut terhapus)
+app.delete('/api/mapel/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [result] = await pool.query('DELETE FROM mapel WHERE id = ?', [id]);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Mapel tidak ditemukan' });
+    }
+    res.json({ message: 'Mapel berhasil dihapus' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

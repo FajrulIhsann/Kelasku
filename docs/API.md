@@ -120,3 +120,23 @@ Backend menyediakan beberapa endpoint REST API yang dapat digunakan:
 
 - **DELETE /api/tugas/:id**
   - **Deskripsi**: Menghapus data tugas berdasarkan ID.
+
+- **GET /api/mapel**
+  - **Deskripsi**: Mengambil master daftar mapel untuk dropdown (diurutkan abjad). Tabel di-seed otomatis saat pertama kosong.
+  - **Contoh Response**:
+    ```json
+    [
+      { "id": 1, "nama": "Bahasa Indonesia" },
+      { "id": 2, "nama": "Matematika" }
+    ]
+    ```
+
+- **POST /api/mapel**
+  - **Deskripsi**: Menambah mapel baru. Nama duplikat ditolak (`409`).
+  - **Body**:
+    ```json
+    { "nama": "Bahasa Jepang" }
+    ```
+
+- **DELETE /api/mapel/:id**
+  - **Deskripsi**: Menghapus mapel dari daftar. Jadwal/tugas lama yang memakai nama ini tidak ikut terhapus.

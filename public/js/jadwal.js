@@ -170,7 +170,9 @@ function addSubjectRow(mapelVal = '', jpVal = '') {
 
   rowDiv.innerHTML = `
     <div class="flex-1">
-      <input type="text" placeholder="Nama Mata Pelajaran" value="${escapeHtml(mapelVal)}" required class="subject-input w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <select required class="subject-input w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="">-- Pilih Mapel --</option>
+      </select>
     </div>
     <div class="w-24">
       <input type="number" min="1" max="2" placeholder="JP" value="${escapeHtml(String(jpVal))}" required class="jp-input w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -180,6 +182,9 @@ function addSubjectRow(mapelVal = '', jpVal = '') {
     </button>
   `;
   container.appendChild(rowDiv);
+  const mapelSelect = rowDiv.querySelector('.subject-input');
+  fillMapelOptions(mapelSelect, mapelVal);
+  mapelSelect.addEventListener('change', () => handleMapelBaru(mapelSelect));
 }
 
 function openAddModal() {
@@ -293,5 +298,72 @@ async function deleteSchedule(id) {
     await loadClasses();
   } catch (err) {
     alert('Gagal menghapus: ' + err.message);
+  }
+}
+
+// --- Kelola master mapel ---
+function openMapelModal() {
+  document.getElementById('inputMapelNama').value = '';
+  document.getElementById('mapelModal').classList.remove('hidden');
+  document.getElementById('mapelModal').classList.add('flex');
+  loadMapelManager();
+}
+
+function closeMapelModal() {
+  document.getElementById('mapelModal').classList.remove('flex');
+  document.getElementById('mapelModal').classList.add('hidden');
+}
+
+async function loadMapelManager() {
+  const box = document.getElementById('mapelList');
+  const list = await loadMapelList(true);
+  if (list.length === 0) {
+    box.innerHTML = '<p class="text-sm text-slate-400 italic py-4 text-center">Belum ada mapel. Tambahkan di atas.</p>';
+    return;
+  }
+  box.innerHTML = list.map(m => `
+    <div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-700">
+      <span class="text-sm font-medium text-slate-700 dark:text-slate-200">${escapeHtml(m.nama)}</span>
+      <button onclick="deleteMapel(${m.id})" title="Hapus" class="text-slate-400 hover:text-red-600 dark:hover:text-red-400 p-1 shrink-0">
+        ${icon('trash', 'w-4 h-4')}
+      </button>
+    </div>`).join('');
+}
+
+async function addMapelFromManager(event) {
+  event.preventDefault();
+  const input = document.getElementById('inputMapelNama');
+  const nama = input.value.trim();
+  if (!nama) return;
+  try {
+    const res = await fetch('/api/mapel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nama })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal menambah mapel');
+    input.value = '';
+    showToast('Mapel ditambahkan');
+    await loadMapelManager();
+    await refreshMapelSelects();
+  } catch (err) {
+    alert('Gagal: ' + err.message);
+  }
+}
+
+async function deleteMapel(id) {
+  const found = (MAPEL_CACHE || []).find(m => m.id === id);
+  const nama = found ? found.nama : '';
+  if (!confirm(`Hapus mapel "${nama}" dari daftar? (Jadwal/tugas lama yang memakai nama ini tidak ikut terhapus)`)) return;
+  try {
+    const res = await fetch(`/api/mapel/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Gagal menghapus mapel');
+    showToast('Mapel dihapus');
+    await loadMapelManager();
+    await refreshMapelSelects();
+  } catch (err) {
+    alert('Gagal: ' + err.message);
   }
 }

@@ -219,7 +219,9 @@ function openTugasModal() {
   document.getElementById('editTugasId').value = '';
   document.getElementById('inputTugasKelas').value = '';
   onTugasModalClassChange('');
-  document.getElementById('inputTugasMapel').value = '';
+  const mapelSel = document.getElementById('inputTugasMapel');
+  fillMapelOptions(mapelSel, '');
+  mapelSel.onchange = () => handleMapelBaru(mapelSel);
   document.getElementById('inputTugasJudul').value = '';
   document.getElementById('inputTugasDeskripsi').value = '';
   document.getElementById('inputTugasDeadline').value = '';
@@ -235,7 +237,9 @@ function openEditTugasModal(id) {
   document.getElementById('editTugasId').value = tugas.id;
   document.getElementById('inputTugasKelas').value = tugas.kelas || '';
   onTugasModalClassChange(tugas.divisi || '');
-  document.getElementById('inputTugasMapel').value = tugas.mapel || '';
+  const mapelSel = document.getElementById('inputTugasMapel');
+  fillMapelOptions(mapelSel, tugas.mapel || '');
+  mapelSel.onchange = () => handleMapelBaru(mapelSel);
   document.getElementById('inputTugasJudul').value = tugas.judul || '';
   document.getElementById('inputTugasDeskripsi').value = tugas.deskripsi || '';
   document.getElementById('inputTugasDeadline').value = toDatetimeLocalValue(tugas.deadline);
